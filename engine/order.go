@@ -14,7 +14,7 @@ type Order struct {
 	AmountTemp       uint64 `json:"amountTemp"`
 	FillIndex        []int  `json:"fillIndex"`
 	ReverseCalculate int64  `json:"reverseCalculate"`
-	IDCalculate      string `json:"IDCalculate"`
+	IDCalculate      string `json:"idCalculate"`
 }
 
 func (order *Order) FromJSON(msg []byte) error {
