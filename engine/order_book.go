@@ -19,6 +19,43 @@ func (orderBook *OrderBook) ToJSON() []byte {
 	return str
 }
 
+func (book *OrderBook) orderBookTemp(side int8) []Order {
+	var orderBookSide []Order
+	if side == 1 {
+		orderBookSide = book.SellOrders
+	} else {
+		orderBookSide = book.BuyOrders
+	}
+	return orderBookSide
+}
+
+func (book *OrderBook) updateOrderBook(side int8, orderBookSide []Order) {
+	if side == 1 {
+		book.SellOrders = orderBookSide
+	} else {
+		book.BuyOrders = orderBookSide
+	}
+}
+
+func (book *OrderBook) contains(orderBookSide []Order, ID string) bool {
+	for _, a := range orderBookSide {
+		if a.ID == ID {
+			return true
+		}
+	}
+	return false
+}
+
+func (book *OrderBook) getIndexByID(ID string, side int8) (int, bool) {
+	orderBookSide := book.orderBookTemp(side)
+	for i, a := range orderBookSide {
+		if a.ID == ID {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
 // Add an order to the order book
 func (book *OrderBook) addOrder(order Order) {
 	var orderBookSide []Order

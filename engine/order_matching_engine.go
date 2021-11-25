@@ -15,43 +15,6 @@ func printJSON(data interface{}) {
 	fmt.Println(string(b))
 }
 
-func (book *OrderBook) orderBookTemp(side int8) []Order {
-	var orderBookSide []Order
-	if side == 1 {
-		orderBookSide = book.SellOrders
-	} else {
-		orderBookSide = book.BuyOrders
-	}
-	return orderBookSide
-}
-
-func (book *OrderBook) updateOrderBook(side int8, orderBookSide []Order) {
-	if side == 1 {
-		book.SellOrders = orderBookSide
-	} else {
-		book.BuyOrders = orderBookSide
-	}
-}
-
-func (book *OrderBook) contains(orderBookSide []Order, ID string) bool {
-	for _, a := range orderBookSide {
-		if a.ID == ID {
-			return true
-		}
-	}
-	return false
-}
-
-func (book *OrderBook) getIndexByID(ID string, side int8) (int, bool) {
-	orderBookSide := book.orderBookTemp(side)
-	for i, a := range orderBookSide {
-		if a.ID == ID {
-			return i, true
-		}
-	}
-	return 0, false
-}
-
 // Process an order and return the trades generated before adding the remaining amount to the market
 func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 	trades := make([]Trade, 0, 1)
