@@ -165,6 +165,98 @@ func TestProcess(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "ManySellBuyValueAndBestPrice",
+			request: []RequestOrder{
+				{
+					side:       0,
+					amount:     3,
+					price:      7400,
+					fillOrKill: false,
+				},
+				{
+					side:       0,
+					amount:     2,
+					price:      7500,
+					fillOrKill: false,
+				},
+				{
+					side:       1,
+					amount:     5,
+					price:      7500,
+					fillOrKill: false,
+				},
+			},
+		},
+		{
+			name: "ManyBuySellValueAndBestPrice",
+			request: []RequestOrder{
+				{
+					side:       1,
+					amount:     3,
+					price:      7500,
+					fillOrKill: false,
+				},
+				{
+					side:       1,
+					amount:     2,
+					price:      7400,
+					fillOrKill: false,
+				},
+				{
+					side:       0,
+					amount:     5,
+					price:      7400,
+					fillOrKill: false,
+				},
+			},
+		},
+		{
+			name: "ManySellBuyValueAndPriceWorst",
+			request: []RequestOrder{
+				{
+					side:       0,
+					amount:     3,
+					price:      7400,
+					fillOrKill: false,
+				},
+				{
+					side:       0,
+					amount:     2,
+					price:      7500,
+					fillOrKill: false,
+				},
+				{
+					side:       1,
+					amount:     5,
+					price:      7400,
+					fillOrKill: false,
+				},
+			},
+		},
+		{
+			name: "ManyBuySellValueAndPriceWorst",
+			request: []RequestOrder{
+				{
+					side:       1,
+					amount:     3,
+					price:      7500,
+					fillOrKill: false,
+				},
+				{
+					side:       1,
+					amount:     2,
+					price:      7400,
+					fillOrKill: false,
+				},
+				{
+					side:       0,
+					amount:     5,
+					price:      7500,
+					fillOrKill: false,
+				},
+			},
+		},
 	}
 
 	for i, test := range tests {
@@ -197,7 +289,8 @@ func TestProcess(t *testing.T) {
 			}
 
 			for _, order := range orderQueue {
-				trades, order = book.Process(order)
+				moreTrades, _ := book.Process(order)
+				trades = append(trades, moreTrades...)
 			}
 
 			for i, trade := range trades {
@@ -286,6 +379,52 @@ func TestProcess(t *testing.T) {
 			if i == 7 {
 				result.BuyOrders = append(result.BuyOrders, orderQueue[0])
 				result.SellOrders = append(result.SellOrders, orderQueue[1])
+			}
+
+			// ManySellBuyValue & ManyBuySellValue
+			if i == 8 || i == 9 {
+
+				resultTrades = []Trade{
+					{
+						TakerOrderID: orderQueue[2].ID,
+						MakerOrderID: orderQueue[0].ID,
+						Amount:       3,
+						Price:        orderQueue[0].Price,
+						CreatedAt:    createdAt,
+					},
+					{
+						TakerOrderID: orderQueue[2].ID,
+						MakerOrderID: orderQueue[1].ID,
+						Amount:       2,
+						Price:        orderQueue[1].Price,
+						CreatedAt:    createdAt,
+					},
+				}
+			}
+
+			// ManySellBuyValueAndPriceWorst & ManyBuySellValueAndPriceWorst
+			if i == 10 || i == 11 {
+
+				resultTrades = []Trade{
+					{
+						TakerOrderID: orderQueue[2].ID,
+						MakerOrderID: orderQueue[0].ID,
+						Amount:       3,
+						Price:        orderQueue[2].Price,
+						CreatedAt:    createdAt,
+					},
+				}
+
+				order = orderQueue[2]
+				order.Amount = 2
+
+				if i == 10 {
+					result.BuyOrders = append(result.BuyOrders, order)
+					result.SellOrders = append(result.SellOrders, orderQueue[1])
+				} else {
+					result.SellOrders = append(result.SellOrders, order)
+					result.BuyOrders = append(result.BuyOrders, orderQueue[1])
+				}
 			}
 
 			assert.Equal(t, resultTrades, trades)

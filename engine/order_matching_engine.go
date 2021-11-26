@@ -3,7 +3,6 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -34,9 +33,9 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 	if n != 0 {
 		var bestPrice bool
 		if order.Side == 1 {
-			bestPrice = orderBookSide[n-1].Price <= orderTemp.Price
+			bestPrice = orderBookSide[0].Price <= orderTemp.Price
 		} else {
-			bestPrice = orderBookSide[n-1].Price >= orderTemp.Price
+			bestPrice = orderBookSide[0].Price >= orderTemp.Price
 		}
 		// if orderBookSide[n-1].Price <= orderTemp.Price {
 		if bestPrice {
@@ -181,7 +180,6 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 
 									orderSide = orderBookSide[i]
 									if orderSide.Amount >= order.Amount {
-										fmt.Println("asu", orderSide.Amount, order.Amount)
 										orderSide.Amount -= order.Amount
 									} else {
 										order.ReverseCalculate = int64(orderTemp.Amount) - int64(orderBookSide[i].Amount)
@@ -456,8 +454,7 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 					return trades, order
 				}
 				// fill a partial order and continue
-				log.Println(61, "\t", i, "\t", order.Amount, order.AmountTemp, orderSide.Amount)
-				if orderSide.Amount < order.Amount {
+				if orderSide.Amount < orderTemp.Amount {
 					orderTemp.Amount -= orderSide.Amount
 					trades = append(trades, Trade{order.ID, orderSide.ID, orderSide.Amount, orderSide.Price, time.Now().String()})
 					order = orderTemp
@@ -483,6 +480,9 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 		}
 
 		if !book.contains(orderBookAdd, order.ID) {
+			if order.AmountTemp > 0 {
+				order.AmountTemp = 0
+			}
 			book.addOrder(order)
 		}
 	}
