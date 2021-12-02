@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -38,6 +39,7 @@ func TestProcess(t *testing.T) {
 		FillIndex:        []int{},
 		ReverseCalculate: 0,
 		IDCalculate:      "",
+		FillReverse:      []FillReverse{},
 	}
 
 	tests := []TestMachine{
@@ -678,8 +680,83 @@ func TestProcess(t *testing.T) {
 			name: "0027-Sell1Fill2FillBuy",
 			request: []RequestOrder{
 				{
-					side:       0,
+					side:       1,
 					amount:     1,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       0,
+					amount:     2,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       1,
+					amount:     1,
+					price:      7500,
+					fillOrKill: true,
+				},
+			},
+		},
+		{
+			name: "0028-Sell1Fill2FillBuy",
+			request: []RequestOrder{
+				{
+					side:       0,
+					amount:     6,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       1,
+					amount:     2,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       1,
+					amount:     5,
+					price:      7500,
+					fillOrKill: true,
+				},
+			},
+		},
+		{
+			name: "0029-Buy1Fill2FillSell",
+			request: []RequestOrder{
+				{
+					side:       1,
+					amount:     6,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       0,
+					amount:     2,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       0,
+					amount:     5,
+					price:      7500,
+					fillOrKill: true,
+				},
+			},
+		},
+		{
+			name: "0030-Sell2Fill2FillBuy",
+			request: []RequestOrder{
+				{
+					side:       0,
+					amount:     6,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       1,
+					amount:     5,
 					price:      7500,
 					fillOrKill: true,
 				},
@@ -918,15 +995,15 @@ func TestProcess(t *testing.T) {
 				resultTrades = []Trade{
 					{
 						TakerOrderID: orderQueue[2].ID,
-						MakerOrderID: orderQueue[1].ID,
-						Amount:       5,
+						MakerOrderID: orderQueue[0].ID,
+						Amount:       2,
 						Price:        orderQueue[2].Price,
 						CreatedAt:    createdAt,
 					},
 					{
 						TakerOrderID: orderQueue[2].ID,
-						MakerOrderID: orderQueue[0].ID,
-						Amount:       2,
+						MakerOrderID: orderQueue[1].ID,
+						Amount:       5,
 						Price:        orderQueue[2].Price,
 						CreatedAt:    createdAt,
 					},
@@ -948,15 +1025,15 @@ func TestProcess(t *testing.T) {
 				resultTrades = []Trade{
 					{
 						TakerOrderID: orderQueue[3].ID,
-						MakerOrderID: orderQueue[2].ID,
-						Amount:       5,
+						MakerOrderID: orderQueue[1].ID,
+						Amount:       1,
 						Price:        orderQueue[3].Price,
 						CreatedAt:    createdAt,
 					},
 					{
 						TakerOrderID: orderQueue[3].ID,
-						MakerOrderID: orderQueue[1].ID,
-						Amount:       1,
+						MakerOrderID: orderQueue[2].ID,
+						Amount:       5,
 						Price:        orderQueue[3].Price,
 						CreatedAt:    createdAt,
 					},
@@ -985,15 +1062,15 @@ func TestProcess(t *testing.T) {
 				resultTrades = []Trade{
 					{
 						TakerOrderID: orderQueue[5].ID,
-						MakerOrderID: orderQueue[4].ID,
-						Amount:       6,
+						MakerOrderID: orderQueue[2].ID,
+						Amount:       3,
 						Price:        orderQueue[5].Price,
 						CreatedAt:    createdAt,
 					},
 					{
 						TakerOrderID: orderQueue[5].ID,
-						MakerOrderID: orderQueue[2].ID,
-						Amount:       3,
+						MakerOrderID: orderQueue[4].ID,
+						Amount:       6,
 						Price:        orderQueue[5].Price,
 						CreatedAt:    createdAt,
 					},
@@ -1029,15 +1106,15 @@ func TestProcess(t *testing.T) {
 				resultTrades = []Trade{
 					{
 						TakerOrderID: orderQueue[5].ID,
-						MakerOrderID: orderQueue[4].ID,
-						Amount:       6,
+						MakerOrderID: orderQueue[2].ID,
+						Amount:       5,
 						Price:        orderQueue[5].Price,
 						CreatedAt:    createdAt,
 					},
 					{
 						TakerOrderID: orderQueue[5].ID,
-						MakerOrderID: orderQueue[2].ID,
-						Amount:       5,
+						MakerOrderID: orderQueue[4].ID,
+						Amount:       6,
 						Price:        orderQueue[5].Price,
 						CreatedAt:    createdAt,
 					},
@@ -1086,13 +1163,53 @@ func TestProcess(t *testing.T) {
 						CreatedAt:    createdAt,
 					},
 				}
-
 			}
-			// fmt.Println("================== EXPECT ======================")
-			// printJSON(resultTrades)
-			// fmt.Println("================== ACTUAL ======================")
-			// printJSON(trades)
-			// fmt.Println("================================================")
+
+			// Sell1Fill2FillBuy
+			if i == 28 {
+
+				result.BuyOrders = append(result.BuyOrders, orderQueue[1], orderQueue[2])
+				result.SellOrders = append(result.SellOrders, orderQueue[0])
+			}
+
+			// Buy1Fill2FillSell
+			if i == 29 {
+
+				result.BuyOrders = append(result.BuyOrders, orderQueue[0])
+				result.SellOrders = append(result.SellOrders, orderQueue[1], orderQueue[2])
+			}
+
+			if i == 30 {
+
+				resultTrades = []Trade{
+					{
+						TakerOrderID: orderQueue[1].ID,
+						MakerOrderID: orderQueue[0].ID,
+						Amount:       1,
+						Price:        orderQueue[0].Price,
+						CreatedAt:    createdAt,
+					},
+					{
+						TakerOrderID: orderQueue[2].ID,
+						MakerOrderID: orderQueue[1].ID,
+						Amount:       1,
+						Price:        orderQueue[1].Price,
+						CreatedAt:    createdAt,
+					},
+				}
+
+				fmt.Println("================================================")
+				for i, v := range orderQueue {
+					fmt.Println(v.ID, v.Amount, v.Side, i)
+				}
+				fmt.Println("================== EXPECT ======================")
+				printJSON(resultTrades)
+				// printJSON(result)
+				fmt.Println("================== ACTUAL ======================")
+				printJSON(trades)
+				// printJSON(book)
+				fmt.Println("================================================")
+			}
 
 			assert.Equal(t, resultTrades, trades)
 			assert.Equal(t, result, book)

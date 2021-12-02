@@ -42,13 +42,14 @@ func TestOrderBookFromJSON(t *testing.T) {
 			"fillOrKill"				:	false,
 			"fillIndex" 				:	[],
 			"reverseCalculate"	: 0,
-			"idCalculate"				: ""
+			"idCalculate"				: "",
+			"fillReverse"				: []
 		}
 		`, uniqueTaker, price, createdAt)
 
 		orderBookSellJSON = fmt.Sprintf(`%v%v%v`, orderBookSellJSON, orderTakerJSON, coma)
 
-		orderTaker = Order{1, price, uniqueTaker, 0, createdAt, false, 0, []int{}, 0, ""}
+		orderTaker = Order{1, price, uniqueTaker, 0, createdAt, false, 0, []int{}, 0, "", []FillReverse{}}
 
 		orderBookSell = append(orderBookSell, orderTaker)
 
@@ -63,13 +64,14 @@ func TestOrderBookFromJSON(t *testing.T) {
 			"fillOrKill"				:	false,
 			"fillIndex" 				:	[],
 			"reverseCalculate"	: 0,
-			"idCalculate"				: ""
+			"idCalculate"				: "",
+			"fillReverse"				: []
 		}
 		`, uniqueMaker, price, createdAt)
 
 		orderBookBuyJSON = fmt.Sprintf(`%v%v%v`, orderBookBuyJSON, orderMakerJSON, coma)
 
-		orderMaker = Order{1, price, uniqueMaker, 1, createdAt, false, 0, []int{}, 0, ""}
+		orderMaker = Order{1, price, uniqueMaker, 1, createdAt, false, 0, []int{}, 0, "", []FillReverse{}}
 
 		orderBookBuy = append(orderBookBuy, orderMaker)
 
@@ -108,19 +110,19 @@ func TestOrderBookToJSON(t *testing.T) {
 		if i == n-1 {
 			coma = ""
 		}
-		orderTakerJSON = fmt.Sprintf(`{"amount":1,"price":%v,"id":"%v","side":0,"createdAt":"%v","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":""}`, price, uniqueTaker, createdAt)
+		orderTakerJSON = fmt.Sprintf(`{"amount":1,"price":%v,"id":"%v","side":0,"createdAt":"%v","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":"","fillReverse":[]}`, price, uniqueTaker, createdAt)
 
 		orderBookSellJSON = fmt.Sprintf(`%v%v%v`, orderBookSellJSON, orderTakerJSON, coma)
 
-		orderTaker = Order{1, price, uniqueTaker, 0, createdAt, false, 0, []int{}, 0, ""}
+		orderTaker = Order{1, price, uniqueTaker, 0, createdAt, false, 0, []int{}, 0, "", []FillReverse{}}
 
 		orderBookSell = append(orderBookSell, orderTaker)
 
-		orderMakerJSON = fmt.Sprintf(`{"amount":1,"price":%v,"id":"%v","side":1,"createdAt":"%v","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":""}`, price, uniqueMaker, createdAt)
+		orderMakerJSON = fmt.Sprintf(`{"amount":1,"price":%v,"id":"%v","side":1,"createdAt":"%v","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":"","fillReverse":[]}`, price, uniqueMaker, createdAt)
 
 		orderBookBuyJSON = fmt.Sprintf(`%v%v%v`, orderBookBuyJSON, orderMakerJSON, coma)
 
-		orderMaker = Order{1, price, uniqueMaker, 1, createdAt, false, 0, []int{}, 0, ""}
+		orderMaker = Order{1, price, uniqueMaker, 1, createdAt, false, 0, []int{}, 0, "", []FillReverse{}}
 
 		orderBookBuy = append(orderBookBuy, orderMaker)
 
@@ -144,12 +146,12 @@ func TestOrderBookTemp(t *testing.T) {
 	book := OrderBook{
 		BuyOrders: []Order{
 			Order{
-				3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			},
 		},
 		SellOrders: []Order{
 			Order{
-				3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			},
 		},
 	}
@@ -182,19 +184,19 @@ func TestUpdateOrderBook(t *testing.T) {
 			book := OrderBook{
 				BuyOrders: []Order{
 					Order{
-						3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+						3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 					},
 				},
 				SellOrders: []Order{
 					Order{
-						3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+						3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 					},
 				},
 			}
 
 			uniqueID := strings.Replace(uuid.New().String(), "-", "", -1)
 			order := Order{
-				3, price, uniqueID, int8(i), createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueID, int8(i), createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			}
 
 			result := append(book.SellOrders, order)
@@ -225,10 +227,10 @@ func TestOrderBookSideContainsByID(t *testing.T) {
 
 	orders := []Order{
 		Order{
-			3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 		Order{
-			3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 	}
 
@@ -253,15 +255,15 @@ func TestOrderBookGetIndexByID(t *testing.T) {
 	book := OrderBook{
 		BuyOrders: []Order{
 			Order{
-				3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueMaker, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			},
 			Order{
-				3, price, uniqueMaker2, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueMaker2, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			},
 		},
 		SellOrders: []Order{
 			Order{
-				3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+				3, price, uniqueTaker, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 			},
 		},
 	}
@@ -286,10 +288,10 @@ func TestOrderBookAddOrder(t *testing.T) {
 
 	orders := []Order{
 		Order{
-			3, price, uniqueID, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueID, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 		Order{
-			3, price, uniqueID, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueID, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 	}
 
@@ -340,10 +342,10 @@ func TestOrderBookRemoveOrder(t *testing.T) {
 
 	orders := []Order{
 		Order{
-			3, price, uniqueID, 1, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueID, 1, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 		Order{
-			3, price, uniqueID, 0, createdAt, fillOrKill, 0, []int{}, 0, "",
+			3, price, uniqueID, 0, createdAt, fillOrKill, 0, []int{}, 0, "", []FillReverse{},
 		},
 	}
 

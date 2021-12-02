@@ -19,7 +19,8 @@ func TestOrderFromJSON(t *testing.T) {
 			"fillOrKill"				:	false,
 			"fillIndex" 				:	[],
 			"reverseCalculate"	: 0,
-			"idCalculate"				: ""
+			"idCalculate"				: "",
+			"fillReverse"				: []
 		}
 	`
 	result := Order{
@@ -33,6 +34,7 @@ func TestOrderFromJSON(t *testing.T) {
 		[]int{},
 		0,
 		"",
+		[]FillReverse{},
 	}
 
 	if err := order.FromJSON([]byte(json)); err != nil {
@@ -42,7 +44,7 @@ func TestOrderFromJSON(t *testing.T) {
 }
 
 func TestOrderToJSON(t *testing.T) {
-	json := `{"amount":1,"price":7400,"id":"5a374064ec7740f287def7a66dff2dc4","side":1,"createdAt":"2021-11-25 05:04:15.291438218 +0000 UTC","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":""}`
+	json := `{"amount":1,"price":7400,"id":"5a374064ec7740f287def7a66dff2dc4","side":1,"createdAt":"2021-11-25 05:04:15.291438218 +0000 UTC","fillOrKill":false,"amountTemp":0,"fillIndex":[],"reverseCalculate":0,"idCalculate":"","fillReverse":[]}`
 	order := Order{
 		1,
 		7400,
@@ -54,6 +56,7 @@ func TestOrderToJSON(t *testing.T) {
 		[]int{},
 		0,
 		"",
+		[]FillReverse{},
 	}
 
 	assert.Equal(t, string(order.ToJSON()), json, "this should be equal")

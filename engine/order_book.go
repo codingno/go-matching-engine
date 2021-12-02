@@ -56,6 +56,16 @@ func (book *OrderBook) getIndexByID(ID string, side int8) (int, bool) {
 	return 0, false
 }
 
+func (book *OrderBook) getOrderByID(ID string, side int8) (Order, bool) {
+	orderBookSide := book.orderBookTemp(side)
+	for _, a := range orderBookSide {
+		if a.ID == ID {
+			return a, true
+		}
+	}
+	return Order{}, false
+}
+
 // Add an order to the order book
 func (book *OrderBook) addOrder(order Order) {
 	var orderBookSide []Order
