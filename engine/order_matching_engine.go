@@ -64,8 +64,6 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 						}
 					}
 					if orderSide.Amount >= orderTemp.Amount {
-						fmt.Println(`🚀 ~ file: order_matching_engine.go ~ line 68 ~ func ~ 						orderSide.Amount -= orderTemp.Amount`, orderSide.Amount, orderTemp.Amount)
-						// printJSON(order)
 						orderSide.Amount -= orderTemp.Amount
 						if orderSide.FillOrKill && orderSide.Amount != 0 {
 							// calculate origin value
@@ -76,16 +74,9 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 							} else {
 								order.ReverseCalculate = int64(orderTemp.Amount) - int64(orderBookSide[i].Amount)
 								order.IDCalculate = orderSide.ID
-								// order.FillReverse = append(order.FillReverse, orderSide.ID)
 								orderSide.Amount = 0
 								order.AmountTemp = 0
 							}
-							// printJSON(order)
-							// else {
-							// 	orderTemp = order
-							// 	orderTemp.Amount -= orderSide.Amount
-							// 	orderSide.Amount = 0
-							// }
 
 							orderSideAmount := orderSide.Amount
 
@@ -95,14 +86,7 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 								if index, ok := book.getIndexByID(order.ID, orderSide.Side); ok {
 									orderSide.FillIndex = append([]int{index}, order.FillIndex...)
 								}
-								// fmt.Println("######################### orderside amount != 0 ######################### ")
-								// printJSON(orderSide)
-								// printJSON(order)
-								// fmt.Println("######################################################################### ")
 								moreTrades, moreOrder := book.Process(orderSide)
-								// printJSON(moreTrades)
-								// printJSON(moreOrder)
-								// fmt.Println("102 ######################################################################### ")
 								if len(moreTrades) > 0 && moreOrder.AmountTemp == 0 && moreOrder.ReverseCalculate == 0 {
 									orderSide = moreOrder
 									orderSide.Amount = orderSide.AmountTemp
@@ -113,15 +97,29 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 										// order.ReverseCalculate = -1 * moreOrder.ReverseCalculate
 										// order.IDCalculate = moreOrder.ID
 										if orderMaker, ok := book.getOrderByID(moreOrder.IDCalculate, moreOrder.Side); ok {
-											fmt.Println("%%%%%%%%%%%%%%")
-											printJSON(orderMaker)
-											fmt.Println("%%%%%%%%%%%%%%")
 											trades = append(trades, Trade{moreOrder.ID, orderMaker.ID, orderMaker.Amount, orderMaker.Price, time.Now().String()})
+
+											book.removeByID(orderMaker.ID, moreOrder.Side)
+
+											orderSide.Amount -= orderMaker.Amount
+
+											orderSide.Amount -= orderTemp.Amount
+
+											trades = append(trades, Trade{order.ID, orderSide.ID, orderTemp.Amount, order.Price, time.Now().String()})
+
+											book.removeOrder(i, order.Side)
+
+											orderTemp.Amount = 0
+
+											order.AmountTemp = orderTemp.Amount
+
+											// order.FillReverse = append(order.FillReverse, FillReverse{
+											// 	ID: orderMaker.ID,
+											// })
 
 											return trades, order
 										}
 										// trades = append(trades)
-										fmt.Println("SIAPA KESINI?")
 										printJSON(order)
 										printJSON(moreOrder)
 										printJSON(orderSide)
@@ -142,10 +140,6 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 							order.AmountTemp -= orderTemp.Amount
 						}
 
-						// fmt.Println("========================================================")
-						// printJSON(order)
-						// printJSON(orderSide)
-						// fmt.Println("========================================================")
 						var isReverseCalculate bool = false
 						if order.ReverseCalculate != 0 && order.IDCalculate != orderSide.ID {
 							// println("masuk pak")
@@ -233,6 +227,7 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 							// orderSideTemp := orderBookSide[i]
 							trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderTemp.Amount, orderSide.Price, time.Now().String()})
 
+							orderBookSide = book.orderBookTemp(order.Side)
 							orderBookSide[i] = orderSide
 
 							book.updateOrderBook(order.Side, orderBookSide)
@@ -426,28 +421,57 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 							orderSide.Amount -= order.Amount
 						} else {
 							order.ReverseCalculate = int64(orderTemp.Amount) - int64(orderBookSide[i].Amount)
+							order.IDCalculate = orderSide.ID
 							orderSide.Amount = 0
 							order.AmountTemp = 0
 						}
-						// else {
-						// 	orderTemp = order
-						// 	orderTemp.Amount -= orderSide.Amount
-						// 	orderSide.Amount = 0
-						// }
 
 						orderSideAmount := orderSide.Amount
 
 						if orderSide.Amount != 0 {
-							// fmt.Println(`🚀 ~ file: order_book_limit_order.go ~ line 91 ~ func ~ orderSide`, orderSide)
 							orderSide = orderBookSide[i]
 							orderSide.AmountTemp = orderSideAmount
-							// orderSide.FillIndex = append([]int{i}, order.FillIndex...)
+							if index, ok := book.getIndexByID(order.ID, orderSide.Side); ok {
+								orderSide.FillIndex = append([]int{index}, order.FillIndex...)
+							}
 							moreTrades, moreOrder := book.Process(orderSide)
-							if len(moreTrades) > 0 && moreOrder.AmountTemp == 0 {
+							if len(moreTrades) > 0 && moreOrder.AmountTemp == 0 && moreOrder.ReverseCalculate == 0 {
 								orderSide = moreOrder
 								orderSide.Amount = orderSide.AmountTemp
 								trades = append(trades, moreTrades...)
 							} else {
+								// fmt.Println("111 ######################################################################### ")
+								if moreOrder.ReverseCalculate < 0 && len(moreOrder.FillIndex) > 0 {
+									// order.ReverseCalculate = -1 * moreOrder.ReverseCalculate
+									// order.IDCalculate = moreOrder.ID
+									if orderMaker, ok := book.getOrderByID(moreOrder.IDCalculate, moreOrder.Side); ok {
+										trades = append(trades, Trade{moreOrder.ID, orderMaker.ID, orderMaker.Amount, orderMaker.Price, time.Now().String()})
+
+										book.removeByID(orderMaker.ID, moreOrder.Side)
+
+										orderSide.Amount -= orderMaker.Amount
+
+										orderSide.Amount -= orderTemp.Amount
+
+										trades = append(trades, Trade{order.ID, orderSide.ID, orderTemp.Amount, order.Price, time.Now().String()})
+
+										book.removeOrder(i, order.Side)
+
+										orderTemp.Amount = 0
+
+										order.AmountTemp = orderTemp.Amount
+
+										// order.FillReverse = append(order.FillReverse, FillReverse{
+										// 	ID: orderMaker.ID,
+										// })
+
+										return trades, order
+									}
+									// trades = append(trades)
+									printJSON(order)
+									printJSON(moreOrder)
+									printJSON(orderSide)
+								}
 								continue
 							}
 							// continue
@@ -463,19 +487,177 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 					} else {
 						order.AmountTemp -= orderTemp.Amount
 					}
-					trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderTemp.Amount, orderSide.Price, time.Now().String()})
-					// order = orderTemp
-					// order.AmountTemp -= orderTemp.Amount
 
-					orderBookSide[i] = orderSide
+					var isReverseCalculate bool = false
+					if order.ReverseCalculate != 0 && order.IDCalculate != orderSide.ID {
+						// println("masuk pak")
+						isReverseCalculate = true
+						order.ReverseCalculate += int64(orderSide.Amount)
+						if order.ReverseCalculate > 0 {
 
-					book.updateOrderBook(order.Side, orderBookSide)
+							orderSide.Amount -= uint64(order.ReverseCalculate)
 
-					if orderSide.Amount == 0 {
+							if orderSide.FillOrKill && orderSide.Amount != 0 {
+								// calculate origin value
+
+								orderSide = orderBookSide[i]
+								if orderSide.Amount >= order.Amount {
+									orderSide.Amount -= order.Amount
+								} else {
+									order.ReverseCalculate = int64(orderTemp.Amount) - int64(orderBookSide[i].Amount)
+									order.IDCalculate = orderSide.ID
+									orderSide.Amount = 0
+									order.AmountTemp = 0
+								}
+								// else {
+								// 	orderTemp = order
+								// 	orderTemp.Amount -= orderSide.Amount
+								// 	orderSide.Amount = 0
+								// }
+
+								orderSideAmount := orderSide.Amount
+
+								if orderSide.Amount != 0 {
+									orderSide = orderBookSide[i]
+									orderSide.AmountTemp = orderSideAmount
+									if index, ok := book.getIndexByID(order.ID, orderSide.Side); ok {
+										orderSide.FillIndex = append([]int{index}, order.FillIndex...)
+									}
+									moreTrades, moreOrder := book.Process(orderSide)
+									if len(moreTrades) > 0 && moreOrder.AmountTemp == 0 {
+										orderSide = moreOrder
+										orderSide.Amount = orderSide.AmountTemp
+										trades = append(trades, moreTrades...)
+									} else {
+										continue
+									}
+									// continue
+								}
+
+								// orderTemp.Amount = order.Amount
+								order.AmountTemp = orderTemp.Amount
+								if order.AmountTemp == 0 {
+									order.FillIndex = nil
+								} else {
+									order.AmountTemp = 0
+								}
+							}
+							order.ReverseCalculate = 0
+						}
+					}
+
+					if order.ReverseCalculate != 0 && !isReverseCalculate {
+						// order.ReverseCalculate = 0
+						// order.IDCalculate = ""
+
+						// fmt.Println("RENE O PAK")
+
+						// printJSON(order)
+						// orderSideTemp := orderBookSide[i]
+						// printJSON(orderSide)
+						// printJSON(orderSideTemp)
+
+						// if orderSide.FillOrKill {
+
+						// 	orderSideTemp := orderBookSide[i]
+						// 	trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderSideTemp.Amount, orderSide.Price, time.Now().String()})
+
+						// 	orderBookSide[i] = orderSide
+
+						// 	book.updateOrderBook(order.Side, orderBookSide)
+						// }
+
+						return trades, order
+					}
+
+					if order.ReverseCalculate == 0 {
+
+						// orderSideTemp := orderBookSide[i]
+						trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderTemp.Amount, orderSide.Price, time.Now().String()})
+
+						orderBookSide = book.orderBookTemp(order.Side)
+						orderBookSide[i] = orderSide
+
+						book.updateOrderBook(order.Side, orderBookSide)
+					} else if !isReverseCalculate && order.IDCalculate != orderSide.ID {
+
+						orderSideTemp := orderBookSide[i]
+						trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderSideTemp.Amount, orderSide.Price, time.Now().String()})
+
+						orderBookSide[i] = orderSide
+
+						book.updateOrderBook(order.Side, orderBookSide)
+					}
+
+					if len(order.FillIndex) > 0 {
+						if order.FillIndex[0] == i {
+							book.removeOrder(i, order.Side)
+							i--
+							n--
+						}
+					}
+
+					if orderSide.Amount == 0 && !isReverseCalculate && orderSide.ID != order.IDCalculate { // full match
 						book.removeOrder(i, order.Side)
 						i--
 						n--
 					}
+					// if orderSide.FillOrKill && orderSide.Amount != 0 {
+					// 	// calculate origin value
+
+					// 	orderSide = orderBookSide[i]
+					// 	if orderSide.Amount >= order.Amount {
+					// 		orderSide.Amount -= order.Amount
+					// 	} else {
+					// 		order.ReverseCalculate = int64(orderTemp.Amount) - int64(orderBookSide[i].Amount)
+					// 		orderSide.Amount = 0
+					// 		order.AmountTemp = 0
+					// 	}
+					// 	// else {
+					// 	// 	orderTemp = order
+					// 	// 	orderTemp.Amount -= orderSide.Amount
+					// 	// 	orderSide.Amount = 0
+					// 	// }
+
+					// 	orderSideAmount := orderSide.Amount
+
+					// 	if orderSide.Amount != 0 {
+					// 		// fmt.Println(`🚀 ~ file: order_book_limit_order.go ~ line 91 ~ func ~ orderSide`, orderSide)
+					// 		orderSide = orderBookSide[i]
+					// 		orderSide.AmountTemp = orderSideAmount
+					// 		// orderSide.FillIndex = append([]int{i}, order.FillIndex...)
+					// 		moreTrades, moreOrder := book.Process(orderSide)
+					// 		if len(moreTrades) > 0 && moreOrder.AmountTemp == 0 {
+					// 			orderSide = moreOrder
+					// 			orderSide.Amount = orderSide.AmountTemp
+					// 			trades = append(trades, moreTrades...)
+					// 		} else {
+					// 			continue
+					// 		}
+					// 		// continue
+					// 	}
+
+					// 	// orderTemp.Amount = order.Amount
+					// 	order.AmountTemp = orderTemp.Amount
+					// 	if order.AmountTemp == 0 {
+					// 		order.FillIndex = nil
+					// 	} else {
+					// 		order.AmountTemp = 0
+					// 	}
+					// } else {
+					// 	order.AmountTemp -= orderTemp.Amount
+					// }
+					// trades = append(trades, Trade{orderTemp.ID, orderSide.ID, orderTemp.Amount, orderSide.Price, time.Now().String()})
+
+					// orderBookSide[i] = orderSide
+
+					// book.updateOrderBook(order.Side, orderBookSide)
+
+					// if orderSide.Amount == 0 {
+					// 	book.removeOrder(i, order.Side)
+					// 	i--
+					// 	n--
+					// }
 					return trades, order
 				}
 				// fill a partial order and continue
@@ -511,9 +693,6 @@ func (book *OrderBook) Process(order Order) ([]Trade, Order) {
 			book.addOrder(order)
 		}
 	}
-	fmt.Println("|||||||||||| ELSE ||||||||||||||")
-	printJSON(order)
-	fmt.Println("||||||||||||||||||||||||||")
 
 	return trades, order
 }

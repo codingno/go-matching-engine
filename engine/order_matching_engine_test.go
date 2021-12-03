@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -774,6 +773,35 @@ func TestProcess(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "0031-Buy2Fill2FillSell",
+			request: []RequestOrder{
+				{
+					side:       1,
+					amount:     6,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       0,
+					amount:     5,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       0,
+					amount:     2,
+					price:      7500,
+					fillOrKill: true,
+				},
+				{
+					side:       1,
+					amount:     1,
+					price:      7500,
+					fillOrKill: true,
+				},
+			},
+		},
 	}
 
 	for i, test := range tests {
@@ -1179,18 +1207,25 @@ func TestProcess(t *testing.T) {
 				result.SellOrders = append(result.SellOrders, orderQueue[1], orderQueue[2])
 			}
 
-			if i == 30 {
+			if i == 30 || i == 31 {
 
 				resultTrades = []Trade{
 					{
+						TakerOrderID: orderQueue[0].ID,
+						MakerOrderID: orderQueue[2].ID,
+						Amount:       2,
+						Price:        orderQueue[2].Price,
+						CreatedAt:    createdAt,
+					},
+					{
 						TakerOrderID: orderQueue[1].ID,
 						MakerOrderID: orderQueue[0].ID,
-						Amount:       1,
+						Amount:       4,
 						Price:        orderQueue[0].Price,
 						CreatedAt:    createdAt,
 					},
 					{
-						TakerOrderID: orderQueue[2].ID,
+						TakerOrderID: orderQueue[3].ID,
 						MakerOrderID: orderQueue[1].ID,
 						Amount:       1,
 						Price:        orderQueue[1].Price,
@@ -1198,18 +1233,19 @@ func TestProcess(t *testing.T) {
 					},
 				}
 
-				fmt.Println("================================================")
-				for i, v := range orderQueue {
-					fmt.Println(v.ID, v.Amount, v.Side, i)
-				}
-				fmt.Println("================== EXPECT ======================")
-				printJSON(resultTrades)
-				// printJSON(result)
-				fmt.Println("================== ACTUAL ======================")
-				printJSON(trades)
-				// printJSON(book)
-				fmt.Println("================================================")
 			}
+
+			// fmt.Println("================================================")
+			// for i, v := range orderQueue {
+			// 	fmt.Println(v.ID, v.Amount, v.Side, i)
+			// }
+			// fmt.Println("================== EXPECT ======================")
+			// printJSON(resultTrades)
+			// printJSON(result)
+			// fmt.Println("================== ACTUAL ======================")
+			// printJSON(trades)
+			// printJSON(book)
+			// fmt.Println("================================================")
 
 			assert.Equal(t, resultTrades, trades)
 			assert.Equal(t, result, book)

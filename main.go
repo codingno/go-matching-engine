@@ -96,8 +96,8 @@ func main() {
 
 	// create the order book
 	book := engine.OrderBook{
-		BuyOrders:  make([]engine.Order, 0, 100),
-		SellOrders: make([]engine.Order, 0, 100),
+		BuyOrders:  make([]engine.Order, 0),
+		SellOrders: make([]engine.Order, 0),
 	}
 
 	getOrderBookCache, err := cache.Get("orderbook")
